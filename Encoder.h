@@ -51,7 +51,9 @@
 #define ENCODER_ARGLIST_SIZE 0
 #endif
 
-
+#ifndef ICACHE_RAM_ATTR
+#define ICACHE_RAM_ATTR
+#endif
 
 // All the data needed by interrupts is consolidated into this ugly struct
 // to facilitate assembly language optimizing of the speed critical update.
@@ -65,6 +67,117 @@ typedef struct {
 	uint8_t                state;
 	int32_t                position;
 } Encoder_internal_state_t;
+
+static Encoder_internal_state_t * ICACHE_RAM_ATTR interruptArgs[ENCODER_ARGLIST_SIZE];
+
+static void ICACHE_RAM_ATTR update(Encoder_internal_state_t *arg) {
+#if defined(__AVR__)
+    // The compiler believes this is just 1 line of code, so
+    // it will inline this function into each interrupt
+    // handler.  That's a tiny bit faster, but grows the code.
+    // Especially when used with ENCODER_OPTIMIZE_INTERRUPTS,
+    // the inline nature allows the ISR prologue and epilogue
+    // to only save/restore necessary registers, for very nice
+    // speed increase.
+    asm volatile (
+        "ld	r30, X+"		"\n\t"
+        "ld	r31, X+"		"\n\t"
+        "ld	r24, Z"			"\n\t"	// r24 = pin1 input
+        "ld	r30, X+"		"\n\t"
+        "ld	r31, X+"		"\n\t"
+        "ld	r25, Z"			"\n\t"  // r25 = pin2 input
+        "ld	r30, X+"		"\n\t"  // r30 = pin1 mask
+        "ld	r31, X+"		"\n\t"	// r31 = pin2 mask
+        "ld	r22, X"			"\n\t"	// r22 = state
+        "andi	r22, 3"			"\n\t"
+        "and	r24, r30"		"\n\t"
+        "breq	L%=1"			"\n\t"	// if (pin1)
+        "ori	r22, 4"			"\n\t"	//	state |= 4
+    "L%=1:"	"and	r25, r31"		"\n\t"
+        "breq	L%=2"			"\n\t"	// if (pin2)
+        "ori	r22, 8"			"\n\t"	//	state |= 8
+    "L%=2:" "ldi	r30, lo8(pm(L%=table))"	"\n\t"
+        "ldi	r31, hi8(pm(L%=table))"	"\n\t"
+        "add	r30, r22"		"\n\t"
+        "adc	r31, __zero_reg__"	"\n\t"
+        "asr	r22"			"\n\t"
+        "asr	r22"			"\n\t"
+        "st	X+, r22"		"\n\t"  // store new state
+        "ld	r22, X+"		"\n\t"
+        "ld	r23, X+"		"\n\t"
+        "ld	r24, X+"		"\n\t"
+        "ld	r25, X+"		"\n\t"
+        "ijmp"				"\n\t"	// jumps to update_finishup()
+        // TODO move this table to another static function,
+        // so it doesn't get needlessly duplicated.  Easier
+        // said than done, due to linker issues and inlining
+    "L%=table:"				"\n\t"
+        "rjmp	L%=end"			"\n\t"	// 0
+        "rjmp	L%=plus1"		"\n\t"	// 1
+        "rjmp	L%=minus1"		"\n\t"	// 2
+        "rjmp	L%=plus2"		"\n\t"	// 3
+        "rjmp	L%=minus1"		"\n\t"	// 4
+        "rjmp	L%=end"			"\n\t"	// 5
+        "rjmp	L%=minus2"		"\n\t"	// 6
+        "rjmp	L%=plus1"		"\n\t"	// 7
+        "rjmp	L%=plus1"		"\n\t"	// 8
+        "rjmp	L%=minus2"		"\n\t"	// 9
+        "rjmp	L%=end"			"\n\t"	// 10
+        "rjmp	L%=minus1"		"\n\t"	// 11
+        "rjmp	L%=plus2"		"\n\t"	// 12
+        "rjmp	L%=minus1"		"\n\t"	// 13
+        "rjmp	L%=plus1"		"\n\t"	// 14
+        "rjmp	L%=end"			"\n\t"	// 15
+    "L%=minus2:"				"\n\t"
+        "subi	r22, 2"			"\n\t"
+        "sbci	r23, 0"			"\n\t"
+        "sbci	r24, 0"			"\n\t"
+        "sbci	r25, 0"			"\n\t"
+        "rjmp	L%=store"		"\n\t"
+    "L%=minus1:"				"\n\t"
+        "subi	r22, 1"			"\n\t"
+        "sbci	r23, 0"			"\n\t"
+        "sbci	r24, 0"			"\n\t"
+        "sbci	r25, 0"			"\n\t"
+        "rjmp	L%=store"		"\n\t"
+    "L%=plus2:"				"\n\t"
+        "subi	r22, 254"		"\n\t"
+        "rjmp	L%=z"			"\n\t"
+    "L%=plus1:"				"\n\t"
+        "subi	r22, 255"		"\n\t"
+    "L%=z:"	"sbci	r23, 255"		"\n\t"
+        "sbci	r24, 255"		"\n\t"
+        "sbci	r25, 255"		"\n\t"
+    "L%=store:"				"\n\t"
+        "st	-X, r25"		"\n\t"
+        "st	-X, r24"		"\n\t"
+        "st	-X, r23"		"\n\t"
+        "st	-X, r22"		"\n\t"
+    "L%=end:"				"\n"
+    : : "x" (arg) : "r22", "r23", "r24", "r25", "r30", "r31");
+#else
+    uint8_t p1val = DIRECT_PIN_READ(arg->pin1_register, arg->pin1_bitmask);
+    uint8_t p2val = DIRECT_PIN_READ(arg->pin2_register, arg->pin2_bitmask);
+    uint8_t state = arg->state & 3;
+    if (p1val) state |= 4;
+    if (p2val) state |= 8;
+    arg->state = (state >> 2);
+    switch (state) {
+        case 1: case 7: case 8: case 14:
+            arg->position++;
+            return;
+        case 2: case 4: case 11: case 13:
+            arg->position--;
+            return;
+        case 3: case 12:
+            arg->position += 2;
+            return;
+        case 6: case 9:
+            arg->position -= 2;
+            return;
+    }
+#endif
+}
 
 class Encoder
 {
@@ -132,8 +245,6 @@ private:
 	uint8_t interrupts_in_use;
 #endif
 public:
-	static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE];
-
 //                           _______         _______       
 //               Pin1 ______|       |_______|       |______ Pin1
 // negative <---         _______         _______         __      --> positive
@@ -181,118 +292,6 @@ public:
 	}
 */
 
-public:
-	// update() is not meant to be called from outside Encoder,
-	// but it is public to allow static interrupt routines.
-	// DO NOT call update() directly from sketches.
-	static void update(Encoder_internal_state_t *arg) {
-#if defined(__AVR__)
-		// The compiler believes this is just 1 line of code, so
-		// it will inline this function into each interrupt
-		// handler.  That's a tiny bit faster, but grows the code.
-		// Especially when used with ENCODER_OPTIMIZE_INTERRUPTS,
-		// the inline nature allows the ISR prologue and epilogue
-		// to only save/restore necessary registers, for very nice
-		// speed increase.
-		asm volatile (
-			"ld	r30, X+"		"\n\t"
-			"ld	r31, X+"		"\n\t"
-			"ld	r24, Z"			"\n\t"	// r24 = pin1 input
-			"ld	r30, X+"		"\n\t"
-			"ld	r31, X+"		"\n\t"
-			"ld	r25, Z"			"\n\t"  // r25 = pin2 input
-			"ld	r30, X+"		"\n\t"  // r30 = pin1 mask
-			"ld	r31, X+"		"\n\t"	// r31 = pin2 mask
-			"ld	r22, X"			"\n\t"	// r22 = state
-			"andi	r22, 3"			"\n\t"
-			"and	r24, r30"		"\n\t"
-			"breq	L%=1"			"\n\t"	// if (pin1)
-			"ori	r22, 4"			"\n\t"	//	state |= 4
-		"L%=1:"	"and	r25, r31"		"\n\t"
-			"breq	L%=2"			"\n\t"	// if (pin2)
-			"ori	r22, 8"			"\n\t"	//	state |= 8
-		"L%=2:" "ldi	r30, lo8(pm(L%=table))"	"\n\t"
-			"ldi	r31, hi8(pm(L%=table))"	"\n\t"
-			"add	r30, r22"		"\n\t"
-			"adc	r31, __zero_reg__"	"\n\t"
-			"asr	r22"			"\n\t"
-			"asr	r22"			"\n\t"
-			"st	X+, r22"		"\n\t"  // store new state
-			"ld	r22, X+"		"\n\t"
-			"ld	r23, X+"		"\n\t"
-			"ld	r24, X+"		"\n\t"
-			"ld	r25, X+"		"\n\t"
-			"ijmp"				"\n\t"	// jumps to update_finishup()
-			// TODO move this table to another static function,
-			// so it doesn't get needlessly duplicated.  Easier
-			// said than done, due to linker issues and inlining
-		"L%=table:"				"\n\t"
-			"rjmp	L%=end"			"\n\t"	// 0
-			"rjmp	L%=plus1"		"\n\t"	// 1
-			"rjmp	L%=minus1"		"\n\t"	// 2
-			"rjmp	L%=plus2"		"\n\t"	// 3
-			"rjmp	L%=minus1"		"\n\t"	// 4
-			"rjmp	L%=end"			"\n\t"	// 5
-			"rjmp	L%=minus2"		"\n\t"	// 6
-			"rjmp	L%=plus1"		"\n\t"	// 7
-			"rjmp	L%=plus1"		"\n\t"	// 8
-			"rjmp	L%=minus2"		"\n\t"	// 9
-			"rjmp	L%=end"			"\n\t"	// 10
-			"rjmp	L%=minus1"		"\n\t"	// 11
-			"rjmp	L%=plus2"		"\n\t"	// 12
-			"rjmp	L%=minus1"		"\n\t"	// 13
-			"rjmp	L%=plus1"		"\n\t"	// 14
-			"rjmp	L%=end"			"\n\t"	// 15
-		"L%=minus2:"				"\n\t"
-			"subi	r22, 2"			"\n\t"
-			"sbci	r23, 0"			"\n\t"
-			"sbci	r24, 0"			"\n\t"
-			"sbci	r25, 0"			"\n\t"
-			"rjmp	L%=store"		"\n\t"
-		"L%=minus1:"				"\n\t"
-			"subi	r22, 1"			"\n\t"
-			"sbci	r23, 0"			"\n\t"
-			"sbci	r24, 0"			"\n\t"
-			"sbci	r25, 0"			"\n\t"
-			"rjmp	L%=store"		"\n\t"
-		"L%=plus2:"				"\n\t"
-			"subi	r22, 254"		"\n\t"
-			"rjmp	L%=z"			"\n\t"
-		"L%=plus1:"				"\n\t"
-			"subi	r22, 255"		"\n\t"
-		"L%=z:"	"sbci	r23, 255"		"\n\t"
-			"sbci	r24, 255"		"\n\t"
-			"sbci	r25, 255"		"\n\t"
-		"L%=store:"				"\n\t"
-			"st	-X, r25"		"\n\t"
-			"st	-X, r24"		"\n\t"
-			"st	-X, r23"		"\n\t"
-			"st	-X, r22"		"\n\t"
-		"L%=end:"				"\n"
-		: : "x" (arg) : "r22", "r23", "r24", "r25", "r30", "r31");
-#else
-		uint8_t p1val = DIRECT_PIN_READ(arg->pin1_register, arg->pin1_bitmask);
-		uint8_t p2val = DIRECT_PIN_READ(arg->pin2_register, arg->pin2_bitmask);
-		uint8_t state = arg->state & 3;
-		if (p1val) state |= 4;
-		if (p2val) state |= 8;
-		arg->state = (state >> 2);
-		switch (state) {
-			case 1: case 7: case 8: case 14:
-				arg->position++;
-				return;
-			case 2: case 4: case 11: case 13:
-				arg->position--;
-				return;
-			case 3: case 12:
-				arg->position += 2;
-				return;
-			case 6: case 9:
-				arg->position -= 2;
-				return;
-		}
-#endif
-	}
 private:
 /*
 #if defined(__AVR__)
@@ -731,184 +730,184 @@ private:
 
 #if defined(ENCODER_USE_INTERRUPTS) && !defined(ENCODER_OPTIMIZE_INTERRUPTS)
 	#ifdef CORE_INT0_PIN
-	static void isr0(void) { update(interruptArgs[0]); }
+	static void ICACHE_RAM_ATTR isr0(void) { update(interruptArgs[0]); }
 	#endif
 	#ifdef CORE_INT1_PIN
-	static void isr1(void) { update(interruptArgs[1]); }
+	static void ICACHE_RAM_ATTR isr1(void) { update(interruptArgs[1]); }
 	#endif
 	#ifdef CORE_INT2_PIN
-	static void isr2(void) { update(interruptArgs[2]); }
+	static void ICACHE_RAM_ATTR isr2(void) { update(interruptArgs[2]); }
 	#endif
 	#ifdef CORE_INT3_PIN
-	static void isr3(void) { update(interruptArgs[3]); }
+	static void ICACHE_RAM_ATTR isr3(void) { update(interruptArgs[3]); }
 	#endif
 	#ifdef CORE_INT4_PIN
-	static void isr4(void) { update(interruptArgs[4]); }
+	static void ICACHE_RAM_ATTR isr4(void) { update(interruptArgs[4]); }
 	#endif
 	#ifdef CORE_INT5_PIN
-	static void isr5(void) { update(interruptArgs[5]); }
+	static void ICACHE_RAM_ATTR isr5(void) { update(interruptArgs[5]); }
 	#endif
 	#ifdef CORE_INT6_PIN
-	static void isr6(void) { update(interruptArgs[6]); }
+	static void ICACHE_RAM_ATTR isr6(void) { update(interruptArgs[6]); }
 	#endif
 	#ifdef CORE_INT7_PIN
-	static void isr7(void) { update(interruptArgs[7]); }
+	static void ICACHE_RAM_ATTR isr7(void) { update(interruptArgs[7]); }
 	#endif
 	#ifdef CORE_INT8_PIN
-	static void isr8(void) { update(interruptArgs[8]); }
+	static void ICACHE_RAM_ATTR isr8(void) { update(interruptArgs[8]); }
 	#endif
 	#ifdef CORE_INT9_PIN
-	static void isr9(void) { update(interruptArgs[9]); }
+	static void ICACHE_RAM_ATTR isr9(void) { update(interruptArgs[9]); }
 	#endif
 	#ifdef CORE_INT10_PIN
-	static void isr10(void) { update(interruptArgs[10]); }
+	static void ICACHE_RAM_ATTR isr10(void) { update(interruptArgs[10]); }
 	#endif
 	#ifdef CORE_INT11_PIN
-	static void isr11(void) { update(interruptArgs[11]); }
+	static void ICACHE_RAM_ATTR isr11(void) { update(interruptArgs[11]); }
 	#endif
 	#ifdef CORE_INT12_PIN
-	static void isr12(void) { update(interruptArgs[12]); }
+	static void ICACHE_RAM_ATTR isr12(void) { update(interruptArgs[12]); }
 	#endif
 	#ifdef CORE_INT13_PIN
-	static void isr13(void) { update(interruptArgs[13]); }
+	static void ICACHE_RAM_ATTR isr13(void) { update(interruptArgs[13]); }
 	#endif
 	#ifdef CORE_INT14_PIN
-	static void isr14(void) { update(interruptArgs[14]); }
+	static void ICACHE_RAM_ATTR isr14(void) { update(interruptArgs[14]); }
 	#endif
 	#ifdef CORE_INT15_PIN
-	static void isr15(void) { update(interruptArgs[15]); }
+	static void ICACHE_RAM_ATTR isr15(void) { update(interruptArgs[15]); }
 	#endif
 	#ifdef CORE_INT16_PIN
-	static void isr16(void) { update(interruptArgs[16]); }
+	static void ICACHE_RAM_ATTR isr16(void) { update(interruptArgs[16]); }
 	#endif
 	#ifdef CORE_INT17_PIN
-	static void isr17(void) { update(interruptArgs[17]); }
+	static void ICACHE_RAM_ATTR isr17(void) { update(interruptArgs[17]); }
 	#endif
 	#ifdef CORE_INT18_PIN
-	static void isr18(void) { update(interruptArgs[18]); }
+	static void ICACHE_RAM_ATTR isr18(void) { update(interruptArgs[18]); }
 	#endif
 	#ifdef CORE_INT19_PIN
-	static void isr19(void) { update(interruptArgs[19]); }
+	static void ICACHE_RAM_ATTR isr19(void) { update(interruptArgs[19]); }
 	#endif
 	#ifdef CORE_INT20_PIN
-	static void isr20(void) { update(interruptArgs[20]); }
+	static void ICACHE_RAM_ATTR isr20(void) { update(interruptArgs[20]); }
 	#endif
 	#ifdef CORE_INT21_PIN
-	static void isr21(void) { update(interruptArgs[21]); }
+	static void ICACHE_RAM_ATTR isr21(void) { update(interruptArgs[21]); }
 	#endif
 	#ifdef CORE_INT22_PIN
-	static void isr22(void) { update(interruptArgs[22]); }
+	static void ICACHE_RAM_ATTR isr22(void) { update(interruptArgs[22]); }
 	#endif
 	#ifdef CORE_INT23_PIN
-	static void isr23(void) { update(interruptArgs[23]); }
+	static void ICACHE_RAM_ATTR isr23(void) { update(interruptArgs[23]); }
 	#endif
 	#ifdef CORE_INT24_PIN
-	static void isr24(void) { update(interruptArgs[24]); }
+	static void ICACHE_RAM_ATTR isr24(void) { update(interruptArgs[24]); }
 	#endif
 	#ifdef CORE_INT25_PIN
-	static void isr25(void) { update(interruptArgs[25]); }
+	static void ICACHE_RAM_ATTR isr25(void) { update(interruptArgs[25]); }
 	#endif
 	#ifdef CORE_INT26_PIN
-	static void isr26(void) { update(interruptArgs[26]); }
+	static void ICACHE_RAM_ATTR isr26(void) { update(interruptArgs[26]); }
 	#endif
 	#ifdef CORE_INT27_PIN
-	static void isr27(void) { update(interruptArgs[27]); }
+	static void ICACHE_RAM_ATTR isr27(void) { update(interruptArgs[27]); }
 	#endif
 	#ifdef CORE_INT28_PIN
-	static void isr28(void) { update(interruptArgs[28]); }
+	static void ICACHE_RAM_ATTR isr28(void) { update(interruptArgs[28]); }
 	#endif
 	#ifdef CORE_INT29_PIN
-	static void isr29(void) { update(interruptArgs[29]); }
+	static void ICACHE_RAM_ATTR isr29(void) { update(interruptArgs[29]); }
 	#endif
 	#ifdef CORE_INT30_PIN
-	static void isr30(void) { update(interruptArgs[30]); }
+	static void ICACHE_RAM_ATTR isr30(void) { update(interruptArgs[30]); }
 	#endif
 	#ifdef CORE_INT31_PIN
-	static void isr31(void) { update(interruptArgs[31]); }
+	static void ICACHE_RAM_ATTR isr31(void) { update(interruptArgs[31]); }
 	#endif
 	#ifdef CORE_INT32_PIN
-	static void isr32(void) { update(interruptArgs[32]); }
+	static void ICACHE_RAM_ATTR isr32(void) { update(interruptArgs[32]); }
 	#endif
 	#ifdef CORE_INT33_PIN
-	static void isr33(void) { update(interruptArgs[33]); }
+	static void ICACHE_RAM_ATTR isr33(void) { update(interruptArgs[33]); }
 	#endif
 	#ifdef CORE_INT34_PIN
-	static void isr34(void) { update(interruptArgs[34]); }
+	static void ICACHE_RAM_ATTR isr34(void) { update(interruptArgs[34]); }
 	#endif
 	#ifdef CORE_INT35_PIN
-	static void isr35(void) { update(interruptArgs[35]); }
+	static void ICACHE_RAM_ATTR isr35(void) { update(interruptArgs[35]); }
 	#endif
 	#ifdef CORE_INT36_PIN
-	static void isr36(void) { update(interruptArgs[36]); }
+	static void ICACHE_RAM_ATTR isr36(void) { update(interruptArgs[36]); }
 	#endif
 	#ifdef CORE_INT37_PIN
-	static void isr37(void) { update(interruptArgs[37]); }
+	static void ICACHE_RAM_ATTR isr37(void) { update(interruptArgs[37]); }
 	#endif
 	#ifdef CORE_INT38_PIN
-	static void isr38(void) { update(interruptArgs[38]); }
+	static void ICACHE_RAM_ATTR isr38(void) { update(interruptArgs[38]); }
 	#endif
 	#ifdef CORE_INT39_PIN
-	static void isr39(void) { update(interruptArgs[39]); }
+	static void ICACHE_RAM_ATTR isr39(void) { update(interruptArgs[39]); }
 	#endif
 	#ifdef CORE_INT40_PIN
-	static void isr40(void) { update(interruptArgs[40]); }
+	static void ICACHE_RAM_ATTR isr40(void) { update(interruptArgs[40]); }
 	#endif
 	#ifdef CORE_INT41_PIN
-	static void isr41(void) { update(interruptArgs[41]); }
+	static void ICACHE_RAM_ATTR isr41(void) { update(interruptArgs[41]); }
 	#endif
 	#ifdef CORE_INT42_PIN
-	static void isr42(void) { update(interruptArgs[42]); }
+	static void ICACHE_RAM_ATTR isr42(void) { update(interruptArgs[42]); }
 	#endif
 	#ifdef CORE_INT43_PIN
-	static void isr43(void) { update(interruptArgs[43]); }
+	static void ICACHE_RAM_ATTR isr43(void) { update(interruptArgs[43]); }
 	#endif
 	#ifdef CORE_INT44_PIN
-	static void isr44(void) { update(interruptArgs[44]); }
+	static void ICACHE_RAM_ATTR isr44(void) { update(interruptArgs[44]); }
 	#endif
 	#ifdef CORE_INT45_PIN
-	static void isr45(void) { update(interruptArgs[45]); }
+	static void ICACHE_RAM_ATTR isr45(void) { update(interruptArgs[45]); }
 	#endif
 	#ifdef CORE_INT46_PIN
-	static void isr46(void) { update(interruptArgs[46]); }
+	static void ICACHE_RAM_ATTR isr46(void) { update(interruptArgs[46]); }
 	#endif
 	#ifdef CORE_INT47_PIN
-	static void isr47(void) { update(interruptArgs[47]); }
+	static void ICACHE_RAM_ATTR isr47(void) { update(interruptArgs[47]); }
 	#endif
 	#ifdef CORE_INT48_PIN
-	static void isr48(void) { update(interruptArgs[48]); }
+	static void ICACHE_RAM_ATTR isr48(void) { update(interruptArgs[48]); }
 	#endif
 	#ifdef CORE_INT49_PIN
-	static void isr49(void) { update(interruptArgs[49]); }
+	static void ICACHE_RAM_ATTR isr49(void) { update(interruptArgs[49]); }
 	#endif
 	#ifdef CORE_INT50_PIN
-	static void isr50(void) { update(interruptArgs[50]); }
+	static void ICACHE_RAM_ATTR isr50(void) { update(interruptArgs[50]); }
 	#endif
 	#ifdef CORE_INT51_PIN
-	static void isr51(void) { update(interruptArgs[51]); }
+	static void ICACHE_RAM_ATTR isr51(void) { update(interruptArgs[51]); }
 	#endif
 	#ifdef CORE_INT52_PIN
-	static void isr52(void) { update(interruptArgs[52]); }
+	static void ICACHE_RAM_ATTR isr52(void) { update(interruptArgs[52]); }
 	#endif
 	#ifdef CORE_INT53_PIN
-	static void isr53(void) { update(interruptArgs[53]); }
+	static void ICACHE_RAM_ATTR isr53(void) { update(interruptArgs[53]); }
 	#endif
 	#ifdef CORE_INT54_PIN
-	static void isr54(void) { update(interruptArgs[54]); }
+	static void ICACHE_RAM_ATTR isr54(void) { update(interruptArgs[54]); }
 	#endif
 	#ifdef CORE_INT55_PIN
-	static void isr55(void) { update(interruptArgs[55]); }
+	static void ICACHE_RAM_ATTR isr55(void) { update(interruptArgs[55]); }
 	#endif
 	#ifdef CORE_INT56_PIN
-	static void isr56(void) { update(interruptArgs[56]); }
+	static void ICACHE_RAM_ATTR isr56(void) { update(interruptArgs[56]); }
 	#endif
 	#ifdef CORE_INT57_PIN
-	static void isr57(void) { update(interruptArgs[57]); }
+	static void ICACHE_RAM_ATTR isr57(void) { update(interruptArgs[57]); }
 	#endif
 	#ifdef CORE_INT58_PIN
-	static void isr58(void) { update(interruptArgs[58]); }
+	static void ICACHE_RAM_ATTR isr58(void) { update(interruptArgs[58]); }
 	#endif
 	#ifdef CORE_INT59_PIN
-	static void isr59(void) { update(interruptArgs[59]); }
+	static void ICACHE_RAM_ATTR isr59(void) { update(interruptArgs[59]); }
 	#endif
 #endif
 };
@@ -916,28 +915,28 @@ private:
 #if defined(ENCODER_USE_INTERRUPTS) && defined(ENCODER_OPTIMIZE_INTERRUPTS)
 #if defined(__AVR__)
 #if defined(INT0_vect) && CORE_NUM_INTERRUPT > 0
-ISR(INT0_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(0)]); }
+ISR(INT0_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(0)]); }
 #endif
 #if defined(INT1_vect) && CORE_NUM_INTERRUPT > 1
-ISR(INT1_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(1)]); }
+ISR(INT1_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(1)]); }
 #endif
 #if defined(INT2_vect) && CORE_NUM_INTERRUPT > 2
-ISR(INT2_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(2)]); }
+ISR(INT2_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(2)]); }
 #endif
 #if defined(INT3_vect) && CORE_NUM_INTERRUPT > 3
-ISR(INT3_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(3)]); }
+ISR(INT3_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(3)]); }
 #endif
 #if defined(INT4_vect) && CORE_NUM_INTERRUPT > 4
-ISR(INT4_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(4)]); }
+ISR(INT4_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(4)]); }
 #endif
 #if defined(INT5_vect) && CORE_NUM_INTERRUPT > 5
-ISR(INT5_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(5)]); }
+ISR(INT5_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(5)]); }
 #endif
 #if defined(INT6_vect) && CORE_NUM_INTERRUPT > 6
-ISR(INT6_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(6)]); }
+ISR(INT6_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(6)]); }
 #endif
 #if defined(INT7_vect) && CORE_NUM_INTERRUPT > 7
-ISR(INT7_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(7)]); }
+ISR(INT7_vect) { update(interruptArgs[SCRAMBLE_INT_ORDER(7)]); }
 #endif
 #endif // AVR
 #if defined(attachInterrupt)
