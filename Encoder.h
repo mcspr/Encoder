@@ -68,7 +68,7 @@ typedef struct {
 	int32_t                position;
 } Encoder_internal_state_t;
 
-static Encoder_internal_state_t * ICACHE_RAM_ATTR interruptArgs[ENCODER_ARGLIST_SIZE];
+static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE];
 
 static void ICACHE_RAM_ATTR update(Encoder_internal_state_t *arg) {
 #if defined(__AVR__)
@@ -178,6 +178,189 @@ static void ICACHE_RAM_ATTR update(Encoder_internal_state_t *arg) {
     }
 #endif
 }
+
+#if defined(ENCODER_USE_INTERRUPTS) && !defined(ENCODER_OPTIMIZE_INTERRUPTS)
+	#ifdef CORE_INT0_PIN
+	static void ICACHE_RAM_ATTR isr0(void) { update(interruptArgs[0]); }
+	#endif
+	#ifdef CORE_INT1_PIN
+	static void ICACHE_RAM_ATTR isr1(void) { update(interruptArgs[1]); }
+	#endif
+	#ifdef CORE_INT2_PIN
+	static void ICACHE_RAM_ATTR isr2(void) { update(interruptArgs[2]); }
+	#endif
+	#ifdef CORE_INT3_PIN
+	static void ICACHE_RAM_ATTR isr3(void) { update(interruptArgs[3]); }
+	#endif
+	#ifdef CORE_INT4_PIN
+	static void ICACHE_RAM_ATTR isr4(void) { update(interruptArgs[4]); }
+	#endif
+	#ifdef CORE_INT5_PIN
+	static void ICACHE_RAM_ATTR isr5(void) { update(interruptArgs[5]); }
+	#endif
+	#ifdef CORE_INT6_PIN
+	static void ICACHE_RAM_ATTR isr6(void) { update(interruptArgs[6]); }
+	#endif
+	#ifdef CORE_INT7_PIN
+	static void ICACHE_RAM_ATTR isr7(void) { update(interruptArgs[7]); }
+	#endif
+	#ifdef CORE_INT8_PIN
+	static void ICACHE_RAM_ATTR isr8(void) { update(interruptArgs[8]); }
+	#endif
+	#ifdef CORE_INT9_PIN
+	static void ICACHE_RAM_ATTR isr9(void) { update(interruptArgs[9]); }
+	#endif
+	#ifdef CORE_INT10_PIN
+	static void ICACHE_RAM_ATTR isr10(void) { update(interruptArgs[10]); }
+	#endif
+	#ifdef CORE_INT11_PIN
+	static void ICACHE_RAM_ATTR isr11(void) { update(interruptArgs[11]); }
+	#endif
+	#ifdef CORE_INT12_PIN
+	static void ICACHE_RAM_ATTR isr12(void) { update(interruptArgs[12]); }
+	#endif
+	#ifdef CORE_INT13_PIN
+	static void ICACHE_RAM_ATTR isr13(void) { update(interruptArgs[13]); }
+	#endif
+	#ifdef CORE_INT14_PIN
+	static void ICACHE_RAM_ATTR isr14(void) { update(interruptArgs[14]); }
+	#endif
+	#ifdef CORE_INT15_PIN
+	static void ICACHE_RAM_ATTR isr15(void) { update(interruptArgs[15]); }
+	#endif
+	#ifdef CORE_INT16_PIN
+	static void ICACHE_RAM_ATTR isr16(void) { update(interruptArgs[16]); }
+	#endif
+	#ifdef CORE_INT17_PIN
+	static void ICACHE_RAM_ATTR isr17(void) { update(interruptArgs[17]); }
+	#endif
+	#ifdef CORE_INT18_PIN
+	static void ICACHE_RAM_ATTR isr18(void) { update(interruptArgs[18]); }
+	#endif
+	#ifdef CORE_INT19_PIN
+	static void ICACHE_RAM_ATTR isr19(void) { update(interruptArgs[19]); }
+	#endif
+	#ifdef CORE_INT20_PIN
+	static void ICACHE_RAM_ATTR isr20(void) { update(interruptArgs[20]); }
+	#endif
+	#ifdef CORE_INT21_PIN
+	static void ICACHE_RAM_ATTR isr21(void) { update(interruptArgs[21]); }
+	#endif
+	#ifdef CORE_INT22_PIN
+	static void ICACHE_RAM_ATTR isr22(void) { update(interruptArgs[22]); }
+	#endif
+	#ifdef CORE_INT23_PIN
+	static void ICACHE_RAM_ATTR isr23(void) { update(interruptArgs[23]); }
+	#endif
+	#ifdef CORE_INT24_PIN
+	static void ICACHE_RAM_ATTR isr24(void) { update(interruptArgs[24]); }
+	#endif
+	#ifdef CORE_INT25_PIN
+	static void ICACHE_RAM_ATTR isr25(void) { update(interruptArgs[25]); }
+	#endif
+	#ifdef CORE_INT26_PIN
+	static void ICACHE_RAM_ATTR isr26(void) { update(interruptArgs[26]); }
+	#endif
+	#ifdef CORE_INT27_PIN
+	static void ICACHE_RAM_ATTR isr27(void) { update(interruptArgs[27]); }
+	#endif
+	#ifdef CORE_INT28_PIN
+	static void ICACHE_RAM_ATTR isr28(void) { update(interruptArgs[28]); }
+	#endif
+	#ifdef CORE_INT29_PIN
+	static void ICACHE_RAM_ATTR isr29(void) { update(interruptArgs[29]); }
+	#endif
+	#ifdef CORE_INT30_PIN
+	static void ICACHE_RAM_ATTR isr30(void) { update(interruptArgs[30]); }
+	#endif
+	#ifdef CORE_INT31_PIN
+	static void ICACHE_RAM_ATTR isr31(void) { update(interruptArgs[31]); }
+	#endif
+	#ifdef CORE_INT32_PIN
+	static void ICACHE_RAM_ATTR isr32(void) { update(interruptArgs[32]); }
+	#endif
+	#ifdef CORE_INT33_PIN
+	static void ICACHE_RAM_ATTR isr33(void) { update(interruptArgs[33]); }
+	#endif
+	#ifdef CORE_INT34_PIN
+	static void ICACHE_RAM_ATTR isr34(void) { update(interruptArgs[34]); }
+	#endif
+	#ifdef CORE_INT35_PIN
+	static void ICACHE_RAM_ATTR isr35(void) { update(interruptArgs[35]); }
+	#endif
+	#ifdef CORE_INT36_PIN
+	static void ICACHE_RAM_ATTR isr36(void) { update(interruptArgs[36]); }
+	#endif
+	#ifdef CORE_INT37_PIN
+	static void ICACHE_RAM_ATTR isr37(void) { update(interruptArgs[37]); }
+	#endif
+	#ifdef CORE_INT38_PIN
+	static void ICACHE_RAM_ATTR isr38(void) { update(interruptArgs[38]); }
+	#endif
+	#ifdef CORE_INT39_PIN
+	static void ICACHE_RAM_ATTR isr39(void) { update(interruptArgs[39]); }
+	#endif
+	#ifdef CORE_INT40_PIN
+	static void ICACHE_RAM_ATTR isr40(void) { update(interruptArgs[40]); }
+	#endif
+	#ifdef CORE_INT41_PIN
+	static void ICACHE_RAM_ATTR isr41(void) { update(interruptArgs[41]); }
+	#endif
+	#ifdef CORE_INT42_PIN
+	static void ICACHE_RAM_ATTR isr42(void) { update(interruptArgs[42]); }
+	#endif
+	#ifdef CORE_INT43_PIN
+	static void ICACHE_RAM_ATTR isr43(void) { update(interruptArgs[43]); }
+	#endif
+	#ifdef CORE_INT44_PIN
+	static void ICACHE_RAM_ATTR isr44(void) { update(interruptArgs[44]); }
+	#endif
+	#ifdef CORE_INT45_PIN
+	static void ICACHE_RAM_ATTR isr45(void) { update(interruptArgs[45]); }
+	#endif
+	#ifdef CORE_INT46_PIN
+	static void ICACHE_RAM_ATTR isr46(void) { update(interruptArgs[46]); }
+	#endif
+	#ifdef CORE_INT47_PIN
+	static void ICACHE_RAM_ATTR isr47(void) { update(interruptArgs[47]); }
+	#endif
+	#ifdef CORE_INT48_PIN
+	static void ICACHE_RAM_ATTR isr48(void) { update(interruptArgs[48]); }
+	#endif
+	#ifdef CORE_INT49_PIN
+	static void ICACHE_RAM_ATTR isr49(void) { update(interruptArgs[49]); }
+	#endif
+	#ifdef CORE_INT50_PIN
+	static void ICACHE_RAM_ATTR isr50(void) { update(interruptArgs[50]); }
+	#endif
+	#ifdef CORE_INT51_PIN
+	static void ICACHE_RAM_ATTR isr51(void) { update(interruptArgs[51]); }
+	#endif
+	#ifdef CORE_INT52_PIN
+	static void ICACHE_RAM_ATTR isr52(void) { update(interruptArgs[52]); }
+	#endif
+	#ifdef CORE_INT53_PIN
+	static void ICACHE_RAM_ATTR isr53(void) { update(interruptArgs[53]); }
+	#endif
+	#ifdef CORE_INT54_PIN
+	static void ICACHE_RAM_ATTR isr54(void) { update(interruptArgs[54]); }
+	#endif
+	#ifdef CORE_INT55_PIN
+	static void ICACHE_RAM_ATTR isr55(void) { update(interruptArgs[55]); }
+	#endif
+	#ifdef CORE_INT56_PIN
+	static void ICACHE_RAM_ATTR isr56(void) { update(interruptArgs[56]); }
+	#endif
+	#ifdef CORE_INT57_PIN
+	static void ICACHE_RAM_ATTR isr57(void) { update(interruptArgs[57]); }
+	#endif
+	#ifdef CORE_INT58_PIN
+	static void ICACHE_RAM_ATTR isr58(void) { update(interruptArgs[58]); }
+	#endif
+	#ifdef CORE_INT59_PIN
+	static void ICACHE_RAM_ATTR isr59(void) { update(interruptArgs[59]); }
+	#endif
+#endif
 
 class Encoder
 {
@@ -728,188 +911,6 @@ private:
 #endif // ENCODER_USE_INTERRUPTS
 
 
-#if defined(ENCODER_USE_INTERRUPTS) && !defined(ENCODER_OPTIMIZE_INTERRUPTS)
-	#ifdef CORE_INT0_PIN
-	static void ICACHE_RAM_ATTR isr0(void) { update(interruptArgs[0]); }
-	#endif
-	#ifdef CORE_INT1_PIN
-	static void ICACHE_RAM_ATTR isr1(void) { update(interruptArgs[1]); }
-	#endif
-	#ifdef CORE_INT2_PIN
-	static void ICACHE_RAM_ATTR isr2(void) { update(interruptArgs[2]); }
-	#endif
-	#ifdef CORE_INT3_PIN
-	static void ICACHE_RAM_ATTR isr3(void) { update(interruptArgs[3]); }
-	#endif
-	#ifdef CORE_INT4_PIN
-	static void ICACHE_RAM_ATTR isr4(void) { update(interruptArgs[4]); }
-	#endif
-	#ifdef CORE_INT5_PIN
-	static void ICACHE_RAM_ATTR isr5(void) { update(interruptArgs[5]); }
-	#endif
-	#ifdef CORE_INT6_PIN
-	static void ICACHE_RAM_ATTR isr6(void) { update(interruptArgs[6]); }
-	#endif
-	#ifdef CORE_INT7_PIN
-	static void ICACHE_RAM_ATTR isr7(void) { update(interruptArgs[7]); }
-	#endif
-	#ifdef CORE_INT8_PIN
-	static void ICACHE_RAM_ATTR isr8(void) { update(interruptArgs[8]); }
-	#endif
-	#ifdef CORE_INT9_PIN
-	static void ICACHE_RAM_ATTR isr9(void) { update(interruptArgs[9]); }
-	#endif
-	#ifdef CORE_INT10_PIN
-	static void ICACHE_RAM_ATTR isr10(void) { update(interruptArgs[10]); }
-	#endif
-	#ifdef CORE_INT11_PIN
-	static void ICACHE_RAM_ATTR isr11(void) { update(interruptArgs[11]); }
-	#endif
-	#ifdef CORE_INT12_PIN
-	static void ICACHE_RAM_ATTR isr12(void) { update(interruptArgs[12]); }
-	#endif
-	#ifdef CORE_INT13_PIN
-	static void ICACHE_RAM_ATTR isr13(void) { update(interruptArgs[13]); }
-	#endif
-	#ifdef CORE_INT14_PIN
-	static void ICACHE_RAM_ATTR isr14(void) { update(interruptArgs[14]); }
-	#endif
-	#ifdef CORE_INT15_PIN
-	static void ICACHE_RAM_ATTR isr15(void) { update(interruptArgs[15]); }
-	#endif
-	#ifdef CORE_INT16_PIN
-	static void ICACHE_RAM_ATTR isr16(void) { update(interruptArgs[16]); }
-	#endif
-	#ifdef CORE_INT17_PIN
-	static void ICACHE_RAM_ATTR isr17(void) { update(interruptArgs[17]); }
-	#endif
-	#ifdef CORE_INT18_PIN
-	static void ICACHE_RAM_ATTR isr18(void) { update(interruptArgs[18]); }
-	#endif
-	#ifdef CORE_INT19_PIN
-	static void ICACHE_RAM_ATTR isr19(void) { update(interruptArgs[19]); }
-	#endif
-	#ifdef CORE_INT20_PIN
-	static void ICACHE_RAM_ATTR isr20(void) { update(interruptArgs[20]); }
-	#endif
-	#ifdef CORE_INT21_PIN
-	static void ICACHE_RAM_ATTR isr21(void) { update(interruptArgs[21]); }
-	#endif
-	#ifdef CORE_INT22_PIN
-	static void ICACHE_RAM_ATTR isr22(void) { update(interruptArgs[22]); }
-	#endif
-	#ifdef CORE_INT23_PIN
-	static void ICACHE_RAM_ATTR isr23(void) { update(interruptArgs[23]); }
-	#endif
-	#ifdef CORE_INT24_PIN
-	static void ICACHE_RAM_ATTR isr24(void) { update(interruptArgs[24]); }
-	#endif
-	#ifdef CORE_INT25_PIN
-	static void ICACHE_RAM_ATTR isr25(void) { update(interruptArgs[25]); }
-	#endif
-	#ifdef CORE_INT26_PIN
-	static void ICACHE_RAM_ATTR isr26(void) { update(interruptArgs[26]); }
-	#endif
-	#ifdef CORE_INT27_PIN
-	static void ICACHE_RAM_ATTR isr27(void) { update(interruptArgs[27]); }
-	#endif
-	#ifdef CORE_INT28_PIN
-	static void ICACHE_RAM_ATTR isr28(void) { update(interruptArgs[28]); }
-	#endif
-	#ifdef CORE_INT29_PIN
-	static void ICACHE_RAM_ATTR isr29(void) { update(interruptArgs[29]); }
-	#endif
-	#ifdef CORE_INT30_PIN
-	static void ICACHE_RAM_ATTR isr30(void) { update(interruptArgs[30]); }
-	#endif
-	#ifdef CORE_INT31_PIN
-	static void ICACHE_RAM_ATTR isr31(void) { update(interruptArgs[31]); }
-	#endif
-	#ifdef CORE_INT32_PIN
-	static void ICACHE_RAM_ATTR isr32(void) { update(interruptArgs[32]); }
-	#endif
-	#ifdef CORE_INT33_PIN
-	static void ICACHE_RAM_ATTR isr33(void) { update(interruptArgs[33]); }
-	#endif
-	#ifdef CORE_INT34_PIN
-	static void ICACHE_RAM_ATTR isr34(void) { update(interruptArgs[34]); }
-	#endif
-	#ifdef CORE_INT35_PIN
-	static void ICACHE_RAM_ATTR isr35(void) { update(interruptArgs[35]); }
-	#endif
-	#ifdef CORE_INT36_PIN
-	static void ICACHE_RAM_ATTR isr36(void) { update(interruptArgs[36]); }
-	#endif
-	#ifdef CORE_INT37_PIN
-	static void ICACHE_RAM_ATTR isr37(void) { update(interruptArgs[37]); }
-	#endif
-	#ifdef CORE_INT38_PIN
-	static void ICACHE_RAM_ATTR isr38(void) { update(interruptArgs[38]); }
-	#endif
-	#ifdef CORE_INT39_PIN
-	static void ICACHE_RAM_ATTR isr39(void) { update(interruptArgs[39]); }
-	#endif
-	#ifdef CORE_INT40_PIN
-	static void ICACHE_RAM_ATTR isr40(void) { update(interruptArgs[40]); }
-	#endif
-	#ifdef CORE_INT41_PIN
-	static void ICACHE_RAM_ATTR isr41(void) { update(interruptArgs[41]); }
-	#endif
-	#ifdef CORE_INT42_PIN
-	static void ICACHE_RAM_ATTR isr42(void) { update(interruptArgs[42]); }
-	#endif
-	#ifdef CORE_INT43_PIN
-	static void ICACHE_RAM_ATTR isr43(void) { update(interruptArgs[43]); }
-	#endif
-	#ifdef CORE_INT44_PIN
-	static void ICACHE_RAM_ATTR isr44(void) { update(interruptArgs[44]); }
-	#endif
-	#ifdef CORE_INT45_PIN
-	static void ICACHE_RAM_ATTR isr45(void) { update(interruptArgs[45]); }
-	#endif
-	#ifdef CORE_INT46_PIN
-	static void ICACHE_RAM_ATTR isr46(void) { update(interruptArgs[46]); }
-	#endif
-	#ifdef CORE_INT47_PIN
-	static void ICACHE_RAM_ATTR isr47(void) { update(interruptArgs[47]); }
-	#endif
-	#ifdef CORE_INT48_PIN
-	static void ICACHE_RAM_ATTR isr48(void) { update(interruptArgs[48]); }
-	#endif
-	#ifdef CORE_INT49_PIN
-	static void ICACHE_RAM_ATTR isr49(void) { update(interruptArgs[49]); }
-	#endif
-	#ifdef CORE_INT50_PIN
-	static void ICACHE_RAM_ATTR isr50(void) { update(interruptArgs[50]); }
-	#endif
-	#ifdef CORE_INT51_PIN
-	static void ICACHE_RAM_ATTR isr51(void) { update(interruptArgs[51]); }
-	#endif
-	#ifdef CORE_INT52_PIN
-	static void ICACHE_RAM_ATTR isr52(void) { update(interruptArgs[52]); }
-	#endif
-	#ifdef CORE_INT53_PIN
-	static void ICACHE_RAM_ATTR isr53(void) { update(interruptArgs[53]); }
-	#endif
-	#ifdef CORE_INT54_PIN
-	static void ICACHE_RAM_ATTR isr54(void) { update(interruptArgs[54]); }
-	#endif
-	#ifdef CORE_INT55_PIN
-	static void ICACHE_RAM_ATTR isr55(void) { update(interruptArgs[55]); }
-	#endif
-	#ifdef CORE_INT56_PIN
-	static void ICACHE_RAM_ATTR isr56(void) { update(interruptArgs[56]); }
-	#endif
-	#ifdef CORE_INT57_PIN
-	static void ICACHE_RAM_ATTR isr57(void) { update(interruptArgs[57]); }
-	#endif
-	#ifdef CORE_INT58_PIN
-	static void ICACHE_RAM_ATTR isr58(void) { update(interruptArgs[58]); }
-	#endif
-	#ifdef CORE_INT59_PIN
-	static void ICACHE_RAM_ATTR isr59(void) { update(interruptArgs[59]); }
-	#endif
-#endif
 };
 
 #if defined(ENCODER_USE_INTERRUPTS) && defined(ENCODER_OPTIMIZE_INTERRUPTS)
