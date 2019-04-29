@@ -43,6 +43,7 @@
 #if defined(ENCODER_USE_INTERRUPTS) || !defined(ENCODER_DO_NOT_USE_INTERRUPTS)
 #define ENCODER_USE_INTERRUPTS
 #define ENCODER_ARGLIST_SIZE CORE_NUM_INTERRUPT
+#include "utility/interrupt_definition.h"
 #include "utility/interrupt_pins.h"
 #ifdef ENCODER_OPTIMIZE_INTERRUPTS
 #include "utility/interrupt_config.h"
@@ -203,7 +204,7 @@ public:
 	// update() is not meant to be called from outside Encoder,
 	// but it is public to allow static interrupt routines.
 	// DO NOT call update() directly from sketches.
-	static void update(Encoder_internal_state_t *arg) {
+	static void IRAM_ATTR update(Encoder_internal_state_t *arg) {
 #if defined(__AVR__)
 		// The compiler believes this is just 1 line of code, so
 		// it will inline this function into each interrupt
@@ -748,187 +749,187 @@ private:
 
 
 #if defined(ENCODER_USE_INTERRUPTS) && !defined(ENCODER_OPTIMIZE_INTERRUPTS)
-	#ifdef CORE_INT0_PIN
-	static void isr0(void) { update(interruptArgs[0]); }
-	#endif
-	#ifdef CORE_INT1_PIN
-	static void isr1(void) { update(interruptArgs[1]); }
-	#endif
-	#ifdef CORE_INT2_PIN
-	static void isr2(void) { update(interruptArgs[2]); }
-	#endif
-	#ifdef CORE_INT3_PIN
-	static void isr3(void) { update(interruptArgs[3]); }
-	#endif
-	#ifdef CORE_INT4_PIN
-	static void isr4(void) { update(interruptArgs[4]); }
-	#endif
-	#ifdef CORE_INT5_PIN
-	static void isr5(void) { update(interruptArgs[5]); }
-	#endif
-	#ifdef CORE_INT6_PIN
-	static void isr6(void) { update(interruptArgs[6]); }
-	#endif
-	#ifdef CORE_INT7_PIN
-	static void isr7(void) { update(interruptArgs[7]); }
-	#endif
-	#ifdef CORE_INT8_PIN
-	static void isr8(void) { update(interruptArgs[8]); }
-	#endif
-	#ifdef CORE_INT9_PIN
-	static void isr9(void) { update(interruptArgs[9]); }
-	#endif
-	#ifdef CORE_INT10_PIN
-	static void isr10(void) { update(interruptArgs[10]); }
-	#endif
-	#ifdef CORE_INT11_PIN
-	static void isr11(void) { update(interruptArgs[11]); }
-	#endif
-	#ifdef CORE_INT12_PIN
-	static void isr12(void) { update(interruptArgs[12]); }
-	#endif
-	#ifdef CORE_INT13_PIN
-	static void isr13(void) { update(interruptArgs[13]); }
-	#endif
-	#ifdef CORE_INT14_PIN
-	static void isr14(void) { update(interruptArgs[14]); }
-	#endif
-	#ifdef CORE_INT15_PIN
-	static void isr15(void) { update(interruptArgs[15]); }
-	#endif
-	#ifdef CORE_INT16_PIN
-	static void isr16(void) { update(interruptArgs[16]); }
-	#endif
-	#ifdef CORE_INT17_PIN
-	static void isr17(void) { update(interruptArgs[17]); }
-	#endif
-	#ifdef CORE_INT18_PIN
-	static void isr18(void) { update(interruptArgs[18]); }
-	#endif
-	#ifdef CORE_INT19_PIN
-	static void isr19(void) { update(interruptArgs[19]); }
-	#endif
-	#ifdef CORE_INT20_PIN
-	static void isr20(void) { update(interruptArgs[20]); }
-	#endif
-	#ifdef CORE_INT21_PIN
-	static void isr21(void) { update(interruptArgs[21]); }
-	#endif
-	#ifdef CORE_INT22_PIN
-	static void isr22(void) { update(interruptArgs[22]); }
-	#endif
-	#ifdef CORE_INT23_PIN
-	static void isr23(void) { update(interruptArgs[23]); }
-	#endif
-	#ifdef CORE_INT24_PIN
-	static void isr24(void) { update(interruptArgs[24]); }
-	#endif
-	#ifdef CORE_INT25_PIN
-	static void isr25(void) { update(interruptArgs[25]); }
-	#endif
-	#ifdef CORE_INT26_PIN
-	static void isr26(void) { update(interruptArgs[26]); }
-	#endif
-	#ifdef CORE_INT27_PIN
-	static void isr27(void) { update(interruptArgs[27]); }
-	#endif
-	#ifdef CORE_INT28_PIN
-	static void isr28(void) { update(interruptArgs[28]); }
-	#endif
-	#ifdef CORE_INT29_PIN
-	static void isr29(void) { update(interruptArgs[29]); }
-	#endif
-	#ifdef CORE_INT30_PIN
-	static void isr30(void) { update(interruptArgs[30]); }
-	#endif
-	#ifdef CORE_INT31_PIN
-	static void isr31(void) { update(interruptArgs[31]); }
-	#endif
-	#ifdef CORE_INT32_PIN
-	static void isr32(void) { update(interruptArgs[32]); }
-	#endif
-	#ifdef CORE_INT33_PIN
-	static void isr33(void) { update(interruptArgs[33]); }
-	#endif
-	#ifdef CORE_INT34_PIN
-	static void isr34(void) { update(interruptArgs[34]); }
-	#endif
-	#ifdef CORE_INT35_PIN
-	static void isr35(void) { update(interruptArgs[35]); }
-	#endif
-	#ifdef CORE_INT36_PIN
-	static void isr36(void) { update(interruptArgs[36]); }
-	#endif
-	#ifdef CORE_INT37_PIN
-	static void isr37(void) { update(interruptArgs[37]); }
-	#endif
-	#ifdef CORE_INT38_PIN
-	static void isr38(void) { update(interruptArgs[38]); }
-	#endif
-	#ifdef CORE_INT39_PIN
-	static void isr39(void) { update(interruptArgs[39]); }
-	#endif
-	#ifdef CORE_INT40_PIN
-	static void isr40(void) { update(interruptArgs[40]); }
-	#endif
-	#ifdef CORE_INT41_PIN
-	static void isr41(void) { update(interruptArgs[41]); }
-	#endif
-	#ifdef CORE_INT42_PIN
-	static void isr42(void) { update(interruptArgs[42]); }
-	#endif
-	#ifdef CORE_INT43_PIN
-	static void isr43(void) { update(interruptArgs[43]); }
-	#endif
-	#ifdef CORE_INT44_PIN
-	static void isr44(void) { update(interruptArgs[44]); }
-	#endif
-	#ifdef CORE_INT45_PIN
-	static void isr45(void) { update(interruptArgs[45]); }
-	#endif
-	#ifdef CORE_INT46_PIN
-	static void isr46(void) { update(interruptArgs[46]); }
-	#endif
-	#ifdef CORE_INT47_PIN
-	static void isr47(void) { update(interruptArgs[47]); }
-	#endif
-	#ifdef CORE_INT48_PIN
-	static void isr48(void) { update(interruptArgs[48]); }
-	#endif
-	#ifdef CORE_INT49_PIN
-	static void isr49(void) { update(interruptArgs[49]); }
-	#endif
-	#ifdef CORE_INT50_PIN
-	static void isr50(void) { update(interruptArgs[50]); }
-	#endif
-	#ifdef CORE_INT51_PIN
-	static void isr51(void) { update(interruptArgs[51]); }
-	#endif
-	#ifdef CORE_INT52_PIN
-	static void isr52(void) { update(interruptArgs[52]); }
-	#endif
-	#ifdef CORE_INT53_PIN
-	static void isr53(void) { update(interruptArgs[53]); }
-	#endif
-	#ifdef CORE_INT54_PIN
-	static void isr54(void) { update(interruptArgs[54]); }
-	#endif
-	#ifdef CORE_INT55_PIN
-	static void isr55(void) { update(interruptArgs[55]); }
-	#endif
-	#ifdef CORE_INT56_PIN
-	static void isr56(void) { update(interruptArgs[56]); }
-	#endif
-	#ifdef CORE_INT57_PIN
-	static void isr57(void) { update(interruptArgs[57]); }
-	#endif
-	#ifdef CORE_INT58_PIN
-	static void isr58(void) { update(interruptArgs[58]); }
-	#endif
-	#ifdef CORE_INT59_PIN
-	static void isr59(void) { update(interruptArgs[59]); }
-	#endif
-#endif
+    #ifdef CORE_INT0_PIN
+    ENCODER_DEFINE_ISR(0)
+    #endif
+    #ifdef CORE_INT1_PIN
+    ENCODER_DEFINE_ISR(1)
+    #endif
+    #ifdef CORE_INT2_PIN
+    ENCODER_DEFINE_ISR(2)
+    #endif
+    #ifdef CORE_INT3_PIN
+    ENCODER_DEFINE_ISR(3)
+    #endif
+    #ifdef CORE_INT4_PIN
+    ENCODER_DEFINE_ISR(4)
+    #endif
+    #ifdef CORE_INT5_PIN
+    ENCODER_DEFINE_ISR(5)
+    #endif
+    #ifdef CORE_INT6_PIN
+    ENCODER_DEFINE_ISR(6)
+    #endif
+    #ifdef CORE_INT7_PIN
+    ENCODER_DEFINE_ISR(7)
+    #endif
+    #ifdef CORE_INT8_PIN
+    ENCODER_DEFINE_ISR(8)
+    #endif
+    #ifdef CORE_INT9_PIN
+    ENCODER_DEFINE_ISR(9)
+    #endif
+    #ifdef CORE_INT10_PIN
+    ENCODER_DEFINE_ISR(10)
+    #endif
+    #ifdef CORE_INT11_PIN
+    ENCODER_DEFINE_ISR(11)
+    #endif
+    #ifdef CORE_INT12_PIN
+    ENCODER_DEFINE_ISR(12)
+    #endif
+    #ifdef CORE_INT13_PIN
+    ENCODER_DEFINE_ISR(13)
+    #endif
+    #ifdef CORE_INT14_PIN
+    ENCODER_DEFINE_ISR(14)
+    #endif
+    #ifdef CORE_INT15_PIN
+    ENCODER_DEFINE_ISR(15)
+    #endif
+    #ifdef CORE_INT16_PIN
+    ENCODER_DEFINE_ISR(16)
+    #endif
+    #ifdef CORE_INT17_PIN
+    ENCODER_DEFINE_ISR(17)
+    #endif
+    #ifdef CORE_INT18_PIN
+    ENCODER_DEFINE_ISR(18)
+    #endif
+    #ifdef CORE_INT19_PIN
+    ENCODER_DEFINE_ISR(19)
+    #endif
+    #ifdef CORE_INT20_PIN
+    ENCODER_DEFINE_ISR(20)
+    #endif
+    #ifdef CORE_INT21_PIN
+    ENCODER_DEFINE_ISR(21)
+    #endif
+    #ifdef CORE_INT22_PIN
+    ENCODER_DEFINE_ISR(22)
+    #endif
+    #ifdef CORE_INT23_PIN
+    ENCODER_DEFINE_ISR(23)
+    #endif
+    #ifdef CORE_INT24_PIN
+    ENCODER_DEFINE_ISR(24)
+    #endif
+    #ifdef CORE_INT25_PIN
+    ENCODER_DEFINE_ISR(25)
+    #endif
+    #ifdef CORE_INT26_PIN
+    ENCODER_DEFINE_ISR(26)
+    #endif
+    #ifdef CORE_INT27_PIN
+    ENCODER_DEFINE_ISR(27)
+    #endif
+    #ifdef CORE_INT28_PIN
+    ENCODER_DEFINE_ISR(28)
+    #endif
+    #ifdef CORE_INT29_PIN
+    ENCODER_DEFINE_ISR(29)
+    #endif
+    #ifdef CORE_INT30_PIN
+    ENCODER_DEFINE_ISR(30)
+    #endif
+    #ifdef CORE_INT31_PIN
+    ENCODER_DEFINE_ISR(31)
+    #endif
+    #ifdef CORE_INT32_PIN
+    ENCODER_DEFINE_ISR(32)
+    #endif
+    #ifdef CORE_INT33_PIN
+    ENCODER_DEFINE_ISR(33)
+    #endif
+    #ifdef CORE_INT34_PIN
+    ENCODER_DEFINE_ISR(34)
+    #endif
+    #ifdef CORE_INT35_PIN
+    ENCODER_DEFINE_ISR(35)
+    #endif
+    #ifdef CORE_INT36_PIN
+    ENCODER_DEFINE_ISR(36)
+    #endif
+    #ifdef CORE_INT37_PIN
+    ENCODER_DEFINE_ISR(37)
+    #endif
+    #ifdef CORE_INT38_PIN
+    ENCODER_DEFINE_ISR(38)
+    #endif
+    #ifdef CORE_INT39_PIN
+    ENCODER_DEFINE_ISR(39)
+    #endif
+    #ifdef CORE_INT40_PIN
+    ENCODER_DEFINE_ISR(40)
+    #endif
+    #ifdef CORE_INT41_PIN
+    ENCODER_DEFINE_ISR(41)
+    #endif
+    #ifdef CORE_INT42_PIN
+    ENCODER_DEFINE_ISR(42)
+    #endif
+    #ifdef CORE_INT43_PIN
+    ENCODER_DEFINE_ISR(43)
+    #endif
+    #ifdef CORE_INT44_PIN
+    ENCODER_DEFINE_ISR(44)
+    #endif
+    #ifdef CORE_INT45_PIN
+    ENCODER_DEFINE_ISR(45)
+    #endif
+    #ifdef CORE_INT46_PIN
+    ENCODER_DEFINE_ISR(46)
+    #endif
+    #ifdef CORE_INT47_PIN
+    ENCODER_DEFINE_ISR(47)
+    #endif
+    #ifdef CORE_INT48_PIN
+    ENCODER_DEFINE_ISR(48)
+    #endif
+    #ifdef CORE_INT49_PIN
+    ENCODER_DEFINE_ISR(49)
+    #endif
+    #ifdef CORE_INT50_PIN
+    ENCODER_DEFINE_ISR(50)
+    #endif
+    #ifdef CORE_INT51_PIN
+    ENCODER_DEFINE_ISR(51)
+    #endif
+    #ifdef CORE_INT52_PIN
+    ENCODER_DEFINE_ISR(52)
+    #endif
+    #ifdef CORE_INT53_PIN
+    ENCODER_DEFINE_ISR(53)
+    #endif
+    #ifdef CORE_INT54_PIN
+    ENCODER_DEFINE_ISR(54)
+    #endif
+    #ifdef CORE_INT55_PIN
+    ENCODER_DEFINE_ISR(55)
+    #endif
+    #ifdef CORE_INT56_PIN
+    ENCODER_DEFINE_ISR(56)
+    #endif
+    #ifdef CORE_INT57_PIN
+    ENCODER_DEFINE_ISR(57)
+    #endif
+    #ifdef CORE_INT58_PIN
+    ENCODER_DEFINE_ISR(58)
+    #endif
+    #ifdef CORE_INT59_PIN
+    ENCODER_DEFINE_ISR(59)
+    #endif
+    #endif
 };
 
 #if defined(ENCODER_USE_INTERRUPTS) && defined(ENCODER_OPTIMIZE_INTERRUPTS)
