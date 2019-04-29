@@ -6,15 +6,15 @@ static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE] = { nullpt
 #endif
 
 Encoder::Encoder(uint8_t pin1, uint8_t pin2) {
-#ifdef INPUT_PULLUP
-    pinMode(pin1, INPUT_PULLUP);
-    pinMode(pin2, INPUT_PULLUP);
-#else
-    pinMode(pin1, INPUT);
-    digitalWrite(pin1, HIGH);
-    pinMode(pin2, INPUT);
-    digitalWrite(pin2, HIGH);
-#endif
+    #ifdef INPUT_PULLUP
+        pinMode(pin1, INPUT_PULLUP);
+        pinMode(pin2, INPUT_PULLUP);
+    #else
+        pinMode(pin1, INPUT);
+        digitalWrite(pin1, HIGH);
+        pinMode(pin2, INPUT);
+        digitalWrite(pin2, HIGH);
+    #endif
 
     encoder.pin1_register = PIN_TO_BASEREG(pin1);
     encoder.pin1_bitmask = PIN_TO_BITMASK(pin1);
@@ -29,14 +29,25 @@ Encoder::Encoder(uint8_t pin1, uint8_t pin2) {
     if (DIRECT_PIN_READ(encoder.pin1_register, encoder.pin1_bitmask)) s |= 1;
     if (DIRECT_PIN_READ(encoder.pin2_register, encoder.pin2_bitmask)) s |= 2;
     encoder.state = s;
-#ifdef ENCODER_USE_INTERRUPTS
-    interrupts_in_use = attach_interrupt(pin1, &encoder);
-    interrupts_in_use += attach_interrupt(pin2, &encoder);
-#endif
+    #ifdef ENCODER_USE_INTERRUPTS
+        interrupts_in_use = attach_interrupt(pin1, &encoder);
+        interrupts_in_use += attach_interrupt(pin2, &encoder);
+    #endif
     //update_finishup();  // to force linker to include the code (does not work)
 }
 
 Encoder::~Encoder() {
+    #ifdef ENCODER_USE_INTERRUPTS
+        noInterrupts();
+        for (unsigned char n=0; n < ENCODER_ARGLIST_SIZE; n++) {
+            Encoder_internal_state_t * arg = interruptArgs[n];
+            if (arg && (arg == &encoder)) {
+                detachInterrupt(n);
+                interruptArgs[n] = nullptr;
+            }
+        }
+        interrupts();
+    #endif
 }
 
 // update() is not meant to be called from outside Encoder,
@@ -72,7 +83,7 @@ Encoder::~Encoder() {
 //	1	1	1	1	no movement
 
 void IRAM_ATTR Encoder::update(Encoder_internal_state_t *arg) {
-#if defined(__AVR__)
+    #if defined(__AVR__)
     // The compiler believes this is just 1 line of code, so
     // it will inline this function into each interrupt
     // handler.  That's a tiny bit faster, but grows the code.
@@ -156,28 +167,28 @@ void IRAM_ATTR Encoder::update(Encoder_internal_state_t *arg) {
             "st	-X, r22"		"\n\t"
             "L%=end:"				"\n"
             : : "x" (arg) : "r22", "r23", "r24", "r25", "r30", "r31");
-#else // !defined(__AVR__)
-    uint8_t p1val = DIRECT_PIN_READ(arg->pin1_register, arg->pin1_bitmask);
-    uint8_t p2val = DIRECT_PIN_READ(arg->pin2_register, arg->pin2_bitmask);
-    uint8_t state = arg->state & 3;
-    if (p1val) state |= 4;
-    if (p2val) state |= 8;
-    arg->state = (state >> 2);
-    switch (state) {
-        case 1: case 7: case 8: case 14:
-            arg->position++;
-            return;
-        case 2: case 4: case 11: case 13:
-            arg->position--;
-            return;
-        case 3: case 12:
-            arg->position += 2;
-            return;
-        case 6: case 9:
-            arg->position -= 2;
-            return;
-    }
-#endif // defined(__AVR__)
+    #else // !defined(__AVR__)
+        uint8_t p1val = DIRECT_PIN_READ(arg->pin1_register, arg->pin1_bitmask);
+        uint8_t p2val = DIRECT_PIN_READ(arg->pin2_register, arg->pin2_bitmask);
+        uint8_t state = arg->state & 3;
+        if (p1val) state |= 4;
+        if (p2val) state |= 8;
+        arg->state = (state >> 2);
+        switch (state) {
+            case 1: case 7: case 8: case 14:
+                arg->position++;
+                return;
+            case 2: case 4: case 11: case 13:
+                arg->position--;
+                return;
+            case 3: case 12:
+                arg->position += 2;
+                return;
+            case 6: case 9:
+                arg->position -= 2;
+                return;
+        }
+    #endif // defined(__AVR__)
 }
 
 /*
