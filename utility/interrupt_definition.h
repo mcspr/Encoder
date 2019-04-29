@@ -8,11 +8,11 @@
 #define IRAM_ATTR ICACHE_RAM_ATTR
 #endif
 
-#define ENCODER_DEFINE_ISR(pin) static void IRAM_ATTR isr##pin (void) { update(interruptArgs[pin]); }
+#define ENCODER_DEFINE_ISR(pin) static void IRAM_ATTR isr##pin (void) { Encoder::update(interruptArgs[pin]); }
 
 #else
 
 #define IRAM_ATTR
-#define ENCODER_DEFINE_ISR(pin) static void isr##pin (void) { update(interruptArgs[pin]); }
+#define ENCODER_DEFINE_ISR(pin) static void isr##pin (void) { Encoder::update(interruptArgs[pin]); }
 
 #endif
